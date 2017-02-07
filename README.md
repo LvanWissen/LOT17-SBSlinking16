@@ -25,3 +25,7 @@ The title candidates and the surrounding authors are compared to a list of possi
 ## How to use
 
 ```$ python main.py```
+
+## Results
+
+

@@ -188,7 +188,7 @@ if __name__ == "__main__":
     with open('results/results.csv', 'w', encoding='utf-8') as csvfile:
         # csvwriter = csv.writer(csvfile, delimiter='\t')
 
-        for n, message in enumerate(data[:10], 1):
+        for n, message in enumerate(data, 1):
 
             print(n, '/', len(data))
 
