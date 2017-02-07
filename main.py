@@ -1,14 +1,13 @@
+# coding: utf-8
+
 import os
 import csv
 import json
 import dateutil.parser
-import numpy as np
-from collections import defaultdict
 from bs4 import BeautifulSoup
-import logging as log
 import pickle
-
-from classification import *
+import re
+from nltk import word_tokenize
 
 TRAINFOLDER = 'data/train/'
 LABELFILETRAIN = 'data/sbs16mining-linking-training-labels.csv'
@@ -44,7 +43,7 @@ def threadparser(location):
 
                 postid = element.postid.get_text()
                 username = element.username.get_text()
-                text = element.text
+                text = element.find('text').text
 
                 date = element.date.get_text()
                 if 'Edited: ' in date:
@@ -57,7 +56,7 @@ def threadparser(location):
                     "threadid": int(threadid),
                     # "username": username,
                     # "date": date,
-                    # "text": text
+                    "text": text
                 }
 
                 messages.append(messagedict)
@@ -75,9 +74,18 @@ def labelparser(filename):
 
 def metaparser(filename):
 
-    meta = json.load(filename)
+    d = dict()
 
+    with open(filename, encoding='utf-8') as jsonfile:
+        metadata = jsonfile.readlines()
 
+        print(metadata[0])
+
+        for bookmeta in metadata:
+            meta = json.loads(bookmeta)
+            d[meta["workID"]] = meta["versions"]
+
+    return d
 
 def bookmatcher(message, labeldata):
     """
@@ -105,75 +113,77 @@ def labeler(data, labeldata):
 
     return y
 
+def titlelist(metadata):
+    """
+    Return list of titles from meta data
+    :param meta:
+    :return:
+    """
+    all_titles = []
+
+    for workid, versions in metadata.items():     
+        for version in versions:
+            booktitle = version["booktitle"]
+            all_titles.append(booktitle)
+            
+    return set(all_titles)
+
+
+def build_titlelist(metadata, d):
+    """
+    Return list of titles from meta data. Titles are stored under their corresponding word keys. 
+    This for faster matching using the Levenstheins distance. 
+    :param meta:
+    :return:
+    """
+    
+    for workid, versions in metadata.items():
+        for version in versions:
+            booktitle = version["booktitle"]
+            author = version["author"]
+            
+            booktitle = re.sub('\(.*\)', '', booktitle)   
+            booktitle = booktitle.strip()
+
+            tokens = list(set(word_tokenize(booktitle.lower())))
+            
+            for word in tokens:
+                try:
+                    d[word].add((booktitle, author, workid))
+                except:
+                    d[word] ={(booktitle, author, workid)}
+                    
+                    
+    return d
+
+def clean_booktitle(booktitle):
+
+    booktitle = re.sub('\(.*\)', '', booktitle)   
+    booktitle = booktitle.strip()
+    
+    return booktitle
+
+
 if __name__ == "__main__":
+
+    # Parse metadata
+    # metadict = metaparser(METAFILE)
+
+    with open('data/titles.pickle', 'rb') as picklefile:
+        d = pickle.load(picklefile)
 
     # Parse messages from the .xml files
     training_data = threadparser(TRAINFOLDER)
-    test_data = threadparser(TESTFOLDER)
+    # test_data = threadparser(TESTFOLDER)
 
     # Training class data (bookids to messages)
     labeldata_train = labelparser(LABELFILETRAIN)
-    labeldata_test = labelparser(LABELFILETEST)
-    
+    # labeldata_test = labelparser(LABELFILETEST)
+
     trainkeys = [i["bookid"] for i in labeldata_train]
-    testkeys = [i["bookid"] for i in labeldata_test]
-    print(set(trainkeys).intersection(set(testkeys)))
-
-    # Build y
-    y = labeler(training_data, labeldata_train)
-    #
-    # metaparser('sbs16mining.book-metadata.json')
-
-    print("Classify!")
-
-    training_data = training_data
-    test_data = test_data
-
-    # Multi Label Classification
-    mlb = MultiLabelBinarizer()
-    yt = mlb.fit_transform(y)
-
-    v = DictVectorizer(sparse=True)
-    X = v.fit_transform(training_data)
-
-    clf = OneVsRestClassifier(SVC(verbose=2))
-    clf.fit(X, yt)
-
-    with open('model.pickle', 'wb') as picklefile:
-        pickle.dump(clf, picklefile)
-
-    print()
-    print("Predicting...")
-
-    # v = DictVectorizer(sparse=False)
-    X_test = v.transform(test_data)
-    yt_test = clf.predict(X_test)
-
-    yt_test = np.array(yt_test)
-    y_test = mlb.inverse_transform(yt_test)
-    # yt_test = np.expand_dims(yt_test, axis=0).transpose()
-    # print(np.shape(yt_test))
-    
-
-    # print(mlb.inverse_transform(yt))
-    # print(y)
-
-    # print(y)
-    # print(y_test)
-
-    y_true = labeler(test_data, labeldata_test)
-    y_true = mlb.transform(y_true)
-    y_true = np.array(y_true)
-    # y_true = np.expand_dims(y_true, axis=0).transpose()
-
-    y_pred = yt_test
-    # print(mlb.inverse_transform(y_true))
+    # testkeys = [i["bookid"] for i in labeldata_test]
 
 
 
-    print('true', y_true)
-    print('pred', y_pred)
 
-    f1 = f1_score(y_true, y_pred, average='samples')
 
-    print("f1-score: {}".format(f1))
