@@ -22,10 +22,26 @@ More information about the mining (linking) task at the [Social Book Search Lab 
 
 The title candidates and the surrounding authors are compared to a list of possible titles and authors. For the sake of speed and to compare only against titles resembling the candidate, the list is made by using a hashdict that consists of words as keys and titles containing this word as values. This way, the entire list of 2.758.660 titles from the metadata does not have to be used. We compute the Levenshtein distance between the candidate and all titles and keep the title and its workid with the highest score. Scores below 90% are discarded. 
 
+### Evaluation
+
+Evaluation is done by calculating the precision, recall and f-measure of the program’s run over the gold data. (F-Measure)
+
 ## How to use
 
 ```$ python main.py```
 
+```$ python evaluate.py```
+
 ## Results
+
+## Requirements
+
+* fuzzywuzzy
+* nltk
+* Stanford CoreNLP and NER ([website](http://stanfordnlp.github.io/CoreNLP/))
+* numpy
+* beautifulsoup4
+* python_dateutil
+
 
 
