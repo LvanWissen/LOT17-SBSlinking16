@@ -9,9 +9,11 @@ import pickle
 import re
 from nltk import word_tokenize
 
-TRAINFOLDER = 'data/train/'
+from classification import classify
+
+FOLDER = 'data/test/'
 LABELFILETRAIN = 'data/sbs16mining-linking-training-labels.csv'
-# LABELFILETEST = 'data/sbs16mining-linking-test-labels-librarything.csv'
+LABELFILETEST = 'data/sbs16mining-linking-test-labels-librarything.csv'
 LABELFILETEST = 'data/sbs16mining-linking-training-labels.csv'
 METAFILE = 'data/sbs16mining.book-metadata.json'
 TESTFOLDER = 'data/train/'
@@ -169,21 +171,38 @@ if __name__ == "__main__":
     # Parse metadata
     # metadict = metaparser(METAFILE)
 
-    with open('data/titles.pickle', 'rb') as picklefile:
+    with open('data/titles_clean.pickle', 'rb') as picklefile:
         d = pickle.load(picklefile)
 
     # Parse messages from the .xml files
-    training_data = threadparser(TRAINFOLDER)
+    data = threadparser(FOLDER)
     # test_data = threadparser(TESTFOLDER)
 
-    # Training class data (bookids to messages)
-    labeldata_train = labelparser(LABELFILETRAIN)
-    # labeldata_test = labelparser(LABELFILETEST)
+    # # Training class data (bookids to messages)
+    # labeldata_train = labelparser(LABELFILETRAIN)
+    # # labeldata_test = labelparser(LABELFILETEST)
 
-    trainkeys = [i["bookid"] for i in labeldata_train]
-    # testkeys = [i["bookid"] for i in labeldata_test]
+    # trainkeys = [i["bookid"] for i in labeldata_train]
+    # # testkeys = [i["bookid"] for i in labeldata_test]
 
+    with open('results/results.csv', 'w', encoding='utf-8') as csvfile:
+        # csvwriter = csv.writer(csvfile, delimiter='\t')
 
+        for n, message in enumerate(data[:10], 1):
 
+            print(n, '/', len(data))
+
+            threadid = message["threadid"]
+            postid = message["postid"]
+
+            ids = classify(message, d, threshold=90)
+            print(ids)
+
+            for workid in ids:
+
+                writestring = "{threadid}\t{postid}\t{workid}".format(threadid=threadid, postid=postid, workid=workid)
+
+                csvfile.write(writestring)
+                csvfile.write("\n")
 
 

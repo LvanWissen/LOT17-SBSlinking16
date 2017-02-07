@@ -1,13 +1,11 @@
 # ## Stanford Parsers
-
 import os
 from nltk.tag import StanfordNERTagger
 from nltk.parse.stanford import StanfordParser
-from nltk.tokenize import sent_tokenize
+from nltk.tokenize import word_tokenize, sent_tokenize
 
 os.environ['JAVAHOME'] = 'C:\\Program Files\\Java\\jre1.8.0_77'
 os.environ['CLASSPATH'] = "C:/Users/Leon/Dropbox/VU/5.3_LOT_Text_Mining/stanford-ner-2016-10-31/"
-
 
 def constituencyparser(sequence):
     
@@ -19,7 +17,6 @@ def constituencyparser(sequence):
     trees = list(parse)
     
     return trees
-
 
 def NERtagger(text):
     

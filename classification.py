@@ -1,24 +1,21 @@
 import re
 import string
 import copy
+import numpy as np
 from nltk.corpus import stopwords
 from fuzzywuzzy import process
-from nltk import word_tokenize
-
-from classification import classify
+from nltk import word_tokenize, sent_tokenize
 from stanford import constituencyparser, NERtagger
 
 def candidate_extractor(message, use_np=False):
     
     text = message["text"]
-    print(text)
     
     stoplist = stopwords.words()    
     stop = "|".join(stoplist)
     
     sentences = sent_tokenize(text)
     first_words = [w[0] for w in [word_tokenize(s) for s in sentences]]
-    print(first_words)
     
     # REGEX Capitalization
     match = re.findall("(?:[{upper}]\w*(?:'s)?\s(?:(?:(?:{stop}) )*))*[{upper}]\w*".format(upper=string.ascii_uppercase, stop=stop), text)
@@ -30,11 +27,9 @@ def candidate_extractor(message, use_np=False):
         if 'by' in m:
             match.append(m.rsplit(' by ')[0])
             match.remove(m)
-            
-        print(m)
         
         if len(m.split()) == 1 and m in first_words:
-            print(m)
+            
             match.remove(m)
             
     
@@ -128,12 +123,13 @@ def get_titles(c, d):
         try:
             title_candidates.update(d[word])
         except:
-            print(c, "not part of a title")        
+            # print(c, "not part of a title")
+            pass        
         
     return title_candidates
 
 
-def classify(message, d, treshold=90):
+def classify(message, d, threshold=90):
     """
     """
     
@@ -156,12 +152,16 @@ def classify(message, d, treshold=90):
         if matchlist:
             titles, authors, works = zip(*matchlist)
                      
-            print(c)
+            # print(c)
             (title, author), confidence = process.extractOne(c, zip(titles,authors))
             workid = works[titles.index(title)]
-            print(title, authors[titles.index(title)], workid, sep=', ')
+            # print(title, authors[titles.index(title)], workid, sep=', ')
             
-            if confidence >= treshold:
-                ids.append((workid, confidence))
-            
-    return sorted(ids, key=lambda x: x[1], reverse=True)
+            if confidence >= threshold:
+                ids.append(workid)
+
+            if ids:
+                return ids
+        
+    # if everything fails:
+    return ['UNKNOWN']
