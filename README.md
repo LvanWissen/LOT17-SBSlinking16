@@ -1,4 +1,5 @@
-# LOT17-SBSlinking16
+# LOT17 Social Book Search Lab 2016
+#### Mining track, task 2: linking
 
 ## Data
 More information about the mining (linking) task at the [Social Book Search Lab website](http://social-book-search.humanities.uva.nl/#/mining) .
@@ -28,9 +29,17 @@ Evaluation is done by calculating the precision, recall and f-measure of the pro
 
 ## How to use
 
-```$ python main.py```
+```
+    $ python main.py
+```
 
-```$ python evaluate.py```
+Have a coffee, and another one... Then:
+
+
+```
+    $ python evaluate.py
+```
+
 
 ## Results
 
