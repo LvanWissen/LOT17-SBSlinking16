@@ -7,6 +7,7 @@ from fuzzywuzzy import process
 from nltk import word_tokenize, sent_tokenize
 from stanford import constituencyparser, NERtagger
 
+
 def candidate_extractor(message, use_np=False):
     
     text = message["text"]
@@ -36,17 +37,22 @@ def candidate_extractor(message, use_np=False):
     # USE NP'S AS BOOKTITLES
     if use_np:
         trees = constituencyparser(text)
-        nps = []
-        for tree in trees:
-            tree = list(tree)[0]
-            nps += [j for j in [" ".join(i.leaves()) for i in tree[0].subtrees() if i.label() == 'NP'] if j.count(' ') > 0]
 
-        for np in nps:
-            if 'by' in np:
-                nps.append(np.rsplit(' by ')[0])
+        if trees: 
+            nps = []
+            for tree in trees:
+                tree = list(tree)[0]
+                nps += [j for j in [" ".join(i.leaves()) for i in tree[0].subtrees() if i.label() == 'NP'] if j.count(' ') > 0]
 
-        matches = [m for m in match if m.lower() not in stoplist and m in nps]
-                
+            nps_new = []
+            for np in nps:
+                nps_new.append(np)
+                if 'by' in np:
+                    nps_new.append(np.rsplit(' by ')[0])
+
+            matches = [m for m in match if m.lower() not in stoplist and m in nps_new]
+        else:
+            matches = [m for m in match if m.lower() not in stoplist]
     else:
         matches = [m for m in match if m.lower() not in stoplist]
 
@@ -129,12 +135,12 @@ def get_titles(c, d):
     return title_candidates
 
 
-def classify(message, d, threshold=90):
+def classify(message, d, threshold=90, use_np=False):
     """
     """
     
     ids = []
-    candidates = candidate_extractor(message)
+    candidates = candidate_extractor(message, use_np)
     
     for c in candidates:        
         matchlist = get_titles(c, d)
@@ -160,8 +166,8 @@ def classify(message, d, threshold=90):
             if confidence >= threshold:
                 ids.append(workid)
 
-            if ids:
-                return ids
+    if ids:
+        return ids
         
     # if everything fails:
     return ['UNKNOWN']

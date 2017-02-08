@@ -2,7 +2,7 @@ import csv
 from collections import defaultdict
 
 GOLDFILE = 'results/sbs16mining-linking-test-labels-librarything.csv'
-RESULTS = 'results/results.csv'
+RESULTS = 'results/results_np.csv'
 
 def reader(file):
 
@@ -60,11 +60,19 @@ def f_score(precision, recall):
 
 
 def dict_equalizer(golddict, resultsdict):
+    """
+    The calculations should only be done on messages
+    that are in both files (gold and resultsrun),
+    otherwise this would influence the overal counts.
+
+    This function makes shure both dictionaries have the same keys.  
+    """
 
     goldset = set(golddict)
     resultset = set(resultsdict)
 
     non_equal = goldset.difference(resultset)
+    non_equal.update(resultset.difference(goldset))
 
     for item in non_equal:
         
@@ -82,6 +90,9 @@ def metrics(GOLDFILE, RESULTS):
     resultsdict = reader(RESULTS)
 
     golddict, resultsdict = dict_equalizer(golddict, resultsdict)
+
+    print(len(golddict))
+    print(len(resultsdict))
 
     P = precision(golddict, resultsdict)
     R = recall(golddict, resultsdict)

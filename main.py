@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import pickle
 import re
 from nltk import word_tokenize
+from collections import defaultdict
 
 from classification import classify
 
@@ -185,24 +186,42 @@ if __name__ == "__main__":
     # trainkeys = [i["bookid"] for i in labeldata_train]
     # # testkeys = [i["bookid"] for i in labeldata_test]
 
+    with open('results/sbs16mining-linking-test-labels-librarything.csv', 'r', encoding='utf-8') as goldfile:
+        goldlabels = defaultdict(list)
+
+        values = goldfile.read().split('\n')
+
+        for v in values:
+            if v:
+                threadid, postid, workid = v.split('\t')
+
+            goldlabels[(threadid, postid)].append(workid)
+
+        # No cheating, only interested in keys.
+        keys = list(goldlabels.keys())
+
     with open('results/results.csv', 'w', encoding='utf-8') as csvfile:
         # csvwriter = csv.writer(csvfile, delimiter='\t')
 
         for n, message in enumerate(data, 1):
 
-            print(n, '/', len(data))
+            print(n, '/', len(data)-720)
 
             threadid = message["threadid"]
             postid = message["postid"]
 
-            ids = classify(message, d, threshold=90)
-            print(ids)
+            if (str(threadid), str(postid)) in keys:
 
-            for workid in ids:
+                ids = classify(message, d, threshold=90, use_np=False)
+                print(ids)
 
-                writestring = "{threadid}\t{postid}\t{workid}".format(threadid=threadid, postid=postid, workid=workid)
+                for workid in ids:
 
-                csvfile.write(writestring)
-                csvfile.write("\n")
+                    writestring = "{threadid}\t{postid}\t{workid}".format(threadid=threadid, postid=postid, workid=workid)
+
+                    csvfile.write(writestring)
+                    csvfile.write("\n")
+            else:
+                print('skipped', threadid, postid)
 
 
