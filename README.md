@@ -43,6 +43,12 @@ Have a coffee, and another one... Then:
 
 ## Results
 
+|                   	| Precision 	| Recall 	| F-measure 	|
+|-------------------	|-----------	|--------	|-----------	|
+| Run1_NP_Selection 	| 0.297     	| 0.175  	| 0.220     	|
+| Run2_without_NP   	| 0.240     	| 0.339  	| 0.281     	|
+
+
 ## Requirements
 
 * fuzzywuzzy
